@@ -29,9 +29,9 @@ public class BMP {
             initHeaderIntoStream(writer, width, height);
             for (int row = 0; row < height; row++) {
                 for (int col = 0; col < width; col++) {
-                    writer.write(red);
-                    writer.write(green);
                     writer.write(blue);
+                    writer.write(green);
+                    writer.write(red);
                 }
                 for (int i = 0; i < padding; i++) {
                     writer.write(0);
@@ -49,7 +49,7 @@ public class BMP {
         writer.writeInt(dataOffset); // pixels
         writer.writeInt(40); // size of BITMAP-INFO
         writer.writeInt(width);
-        writer.writeInt(height);
+        writer.writeInt(-height);
         writer.writeChar(1); // const 1
         writer.writeChar(24); // size of pixel
         writer.writeInt(0); // compress method

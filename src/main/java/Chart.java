@@ -11,11 +11,12 @@ public class Chart extends BMP {
     public void updateSegmentFromStream(int x, int y, int segmentWidth, int segmentHeight, InputStream fragment)
             throws IOException {
         fragment.readNBytes(10);
-        int offset = fragment.read() + fragment.read() << 8;
-        fragment.readNBytes(offset - 12);
-        int segmentPadding = (segmentWidth * bytePerPixel * 8 + 31) / 32 * 4 - segmentWidth * bytePerPixel;
-        try (RandomAccessFile file = getRandomAccessFileData("w")) {
-            file.skipBytes(bytePerPixel * x * y);
+        int offset = fragment.read() + (fragment.read() << 8) + (fragment.read() << 16) + (fragment.read() << 24);
+        fragment.readNBytes(offset - 14);
+        int rowLength = (segmentWidth * bytePerPixel * 8 + 31) / 32 * 4;
+        int segmentPadding = rowLength - segmentWidth * bytePerPixel;
+        try (RandomAccessFile file = getRandomAccessFileData("rw")) {
+            file.skipBytes(bytePerPixel * ((getWidth() + getPadding()) * y + x));
             for (int row = y; row < Math.min(y + segmentHeight, getHeight()); row++) {
                 for (int col = x; col < Math.min(x + segmentWidth, getWidth()); col++) {
                     for (int i = 0; i < bytePerPixel; i++) {
@@ -23,12 +24,13 @@ public class Chart extends BMP {
                     }
                 }
                 if (x + segmentHeight > getHeight()) {
-                    fragment.readNBytes(x + segmentHeight - getHeight());
+                    fragment.readNBytes(bytePerPixel * (x + segmentHeight - getHeight()));
                 }
                 fragment.readNBytes(segmentPadding);
-                file.skipBytes(Math.max(0, getHeight() - x - segmentHeight) + x + getPadding());
+                file.skipBytes(bytePerPixel * (Math.max(0, (getHeight() - x - segmentHeight)) + x) + getPadding());
             }
         } catch (IOException e) {
+            e.printStackTrace();
             throw new IOException("Problem with editing file: " + getPath(), e);
         }
     }
@@ -39,7 +41,7 @@ public class Chart extends BMP {
         initHeaderIntoStream(stream, segmentWidth, segmentHeight);
         int segmentPadding = (segmentWidth * bytePerPixel * 8 + 31) / 32 * 4 - segmentWidth * bytePerPixel;
         try (RandomAccessFile file = getRandomAccessFileData("r")) {
-            file.skipBytes(bytePerPixel * x * y);
+            file.skipBytes(bytePerPixel * ((getWidth() + getPadding()) * y + x));
             for (int row = y; row < Math.min(y + segmentHeight, getHeight()); row++) {
                 for (int col = x; col < Math.min(x + segmentWidth, getWidth()); col++) {
                     for (int i = 0; i < bytePerPixel; i++) {
@@ -54,7 +56,7 @@ public class Chart extends BMP {
                 for (int col = 0; col < segmentPadding; col++) {
                     stream.write(0);
                 }
-                file.skipBytes(Math.max(0, getHeight() - x - segmentHeight) + x + getPadding());
+                file.skipBytes(bytePerPixel * (Math.max(0, (getHeight() - x - segmentHeight)) + x) + getPadding());
             }
             for (int row = Math.min(y + segmentHeight, getHeight()); row < y + segmentHeight; row++) {
                 for (int col = x; col < x + segmentWidth; col++) {

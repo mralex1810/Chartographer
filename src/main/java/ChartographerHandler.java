@@ -50,6 +50,7 @@ public class ChartographerHandler implements HttpHandler {
         chartsById.get(id).delete();
         chartsById.remove(id);
         exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, 0);
+        exchange.getResponseBody().flush();
     }
 
     private void handleGet(HttpExchange exchange, Map<String, String> query) throws IOException {
@@ -77,9 +78,6 @@ public class ChartographerHandler implements HttpHandler {
         if (checkErrorHandle(id, exchange, query)) {
             return;
         }
-        int width = Integer.parseInt(query.get("width"));
-        int height = Integer.parseInt(query.get("height"));
-        exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, BMP.sizeOfBmp(width, height));
         chartsById.get(id).updateSegmentFromStream(
                 Integer.parseInt(query.get("x")),
                 Integer.parseInt(query.get("y")),
@@ -88,6 +86,7 @@ public class ChartographerHandler implements HttpHandler {
                 exchange.getRequestBody()
         );
         exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, 0);
+        exchange.getResponseBody().flush();
     }
 
 
@@ -95,11 +94,9 @@ public class ChartographerHandler implements HttpHandler {
         long id;
         boolean correct;
         try {
-            int x = Integer.parseInt(query.get("x"));
-            int y = Integer.parseInt(query.get("y"));
             int width = Integer.parseInt(query.get("width"));
             int height = Integer.parseInt(query.get("height"));
-            correct = width >= 1 && height >= 1 && width <= 20000 && height <= 50000 && x >= 0 && y >= 0;
+            correct = width >= 1 && height >= 1 && width <= 20000 && height <= 50000;
         } catch (NumberFormatException e) {
             correct = false;
         }
