@@ -15,7 +15,7 @@ public class Server {
                     new InetSocketAddress(8080),
                     0
             );
-            server.createContext("/chartas", new Handler(workingDirectory));
+            server.createContext("/chartas", new ChartographerHandler(workingDirectory));
             server.start();
         } catch (IOException e) {
             System.err.println("Problem with IO: " + e.getMessage());
