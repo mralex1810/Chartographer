@@ -38,11 +38,11 @@ public class ChartographerHandler implements HttpHandler {
         } else {
             exchange.sendResponseHeaders(HttpURLConnection.HTTP_BAD_REQUEST, 0);
         }
+        exchange.close();
     }
 
     private void handleDelete(HttpExchange exchange) throws IOException {
         long id = parseIdFromPath(exchange.getRequestURI().getPath());
-        System.out.printf("Delete %d\n", id);
         if (!chartsById.containsKey(id)) {
             exchange.sendResponseHeaders(HttpURLConnection.HTTP_NOT_FOUND, 0);
             return;
@@ -50,12 +50,11 @@ public class ChartographerHandler implements HttpHandler {
         chartsById.get(id).delete();
         chartsById.remove(id);
         exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, 0);
-        exchange.getResponseBody().flush();
+
     }
 
     private void handleGet(HttpExchange exchange, Map<String, String> query) throws IOException {
         long id = parseIdFromPath(exchange.getRequestURI().getPath());
-        System.out.printf("Get %d\n", id);
         if (checkErrorHandle(id, exchange, query)) {
             return;
         }
@@ -74,7 +73,6 @@ public class ChartographerHandler implements HttpHandler {
 
     private void handleUpdate(HttpExchange exchange, Map<String, String> query) throws IOException {
         long id = parseIdFromPath(exchange.getRequestURI().getPath());
-        System.out.printf("Update %d\n", id);
         if (checkErrorHandle(id, exchange, query)) {
             return;
         }
@@ -86,7 +84,7 @@ public class ChartographerHandler implements HttpHandler {
                 exchange.getRequestBody()
         );
         exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, 0);
-        exchange.getResponseBody().flush();
+
     }
 
 
@@ -108,7 +106,6 @@ public class ChartographerHandler implements HttpHandler {
                 Integer.parseInt(query.get("width")),
                 Integer.parseInt(query.get("height"))
         );
-        System.out.printf("Created %d\n", id);
         exchange.sendResponseHeaders(HttpURLConnection.HTTP_CREATED, Long.toString(id).length());
         try (OutputStreamWriter outputStream = new OutputStreamWriter(exchange.getResponseBody())) {
             outputStream.write(Long.toString(id));

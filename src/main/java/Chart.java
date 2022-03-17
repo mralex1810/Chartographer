@@ -23,11 +23,11 @@ public class Chart extends BMP {
                         file.write(fragment.read());
                     }
                 }
-                if (x + segmentHeight > getHeight()) {
-                    fragment.readNBytes(bytePerPixel * (x + segmentHeight - getHeight()));
+                if (x + segmentWidth > getWidth()) {
+                    fragment.readNBytes(bytePerPixel * (x + segmentWidth - getWidth()));
                 }
                 fragment.readNBytes(segmentPadding);
-                file.skipBytes(bytePerPixel * (Math.max(0, (getHeight() - x - segmentHeight)) + x) + getPadding());
+                file.skipBytes(bytePerPixel * (Math.max(0, (getWidth() - x - segmentWidth)) + x) + getPadding());
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -39,7 +39,8 @@ public class Chart extends BMP {
             throws IOException {
         LittleEndianOutputStream stream = new LittleEndianOutputStream(new BufferedOutputStream(outputStream));
         initHeaderIntoStream(stream, segmentWidth, segmentHeight);
-        int segmentPadding = (segmentWidth * bytePerPixel * 8 + 31) / 32 * 4 - segmentWidth * bytePerPixel;
+        int rowLength = (segmentWidth * bytePerPixel * 8 + 31) / 32 * 4;
+        int segmentPadding = rowLength - segmentWidth * bytePerPixel;
         try (RandomAccessFile file = getRandomAccessFileData("r")) {
             file.skipBytes(bytePerPixel * ((getWidth() + getPadding()) * y + x));
             for (int row = y; row < Math.min(y + segmentHeight, getHeight()); row++) {
@@ -48,15 +49,13 @@ public class Chart extends BMP {
                         stream.write(file.read());
                     }
                 }
-                for (int col = getWidth(); col < x + segmentWidth; col++) {
-                    for (int i = 0; i < bytePerPixel; i++) {
-                        stream.write(0);
-                    }
-                }
-                for (int col = 0; col < segmentPadding; col++) {
+                for (int i = 0; i < bytePerPixel * ((x + segmentWidth - getWidth())); i++) {
                     stream.write(0);
                 }
-                file.skipBytes(bytePerPixel * (Math.max(0, (getHeight() - x - segmentHeight)) + x) + getPadding());
+                for (int i = 0; i < segmentPadding; i++) {
+                    stream.write(0);
+                }
+                file.skipBytes(bytePerPixel * (Math.max(0, (getWidth() - x - segmentWidth)) + x) + getPadding());
             }
             for (int row = Math.min(y + segmentHeight, getHeight()); row < y + segmentHeight; row++) {
                 for (int col = x; col < x + segmentWidth; col++) {
