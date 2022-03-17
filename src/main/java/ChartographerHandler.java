@@ -11,14 +11,13 @@ import java.util.Objects;
 
 public class ChartographerHandler implements HttpHandler {
 
+    private static long maxId = 0;
     private final String workingDirectory;
     private final Map<Long, Chart> chartsById;
-    private long maxId;
 
     public ChartographerHandler(String workingDirectory) {
         this.workingDirectory = workingDirectory;
         chartsById = new HashMap<>();
-        maxId = 0;
     }
 
     @Override

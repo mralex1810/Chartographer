@@ -13,8 +13,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class ChartographerTest {
-    static Set<String> ids = new HashSet<>();
-    static HttpClient client = HttpClient.newBuilder().build();
+    Set<String> ids = new HashSet<>();
+    HttpClient client;
     String resourceDirectory;
     String id;
     Path tmpPicture;
@@ -26,21 +26,13 @@ public class ChartographerTest {
     }
 
     @AfterAll
-    static void tear() throws URISyntaxException, IOException, InterruptedException {
-        for (String id : ids) {
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(new URI("http://localhost:8080/chartas/" + id + "/"))
-                    .DELETE()
-                    .build();
-            HttpResponse<Void> response = client.send(request, HttpResponse.BodyHandlers.discarding());
-            Assertions.assertEquals(HttpURLConnection.HTTP_OK, response.statusCode());
-        }
-        ids.clear();
+    static void tear() {
         Server.stopServer();
     }
 
     @BeforeEach
     void setupThis() throws URISyntaxException, IOException, InterruptedException {
+        client = HttpClient.newBuilder().build();
         resourceDirectory = Path.of(new File("").getAbsolutePath(), "target", "test-classes", "files")
                 .toAbsolutePath().toString();
         HttpRequest request = HttpRequest.newBuilder()
@@ -52,6 +44,19 @@ public class ChartographerTest {
         ids.add(response.body());
         id = response.body();
         tmpPicture = Path.of(resourceDirectory, "tmp.bmp");
+    }
+
+    @AfterEach
+    void tearThis() throws URISyntaxException, IOException, InterruptedException {
+        for (String id : ids) {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(new URI("http://localhost:8080/chartas/" + id + "/"))
+                    .DELETE()
+                    .build();
+            HttpResponse<Void> response = client.send(request, HttpResponse.BodyHandlers.discarding());
+            Assertions.assertEquals(HttpURLConnection.HTTP_OK, response.statusCode());
+        }
+        ids.clear();
     }
 
     @Test
