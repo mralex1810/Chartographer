@@ -22,7 +22,7 @@ public class ChartographerTest {
     @BeforeAll
     static void setup() {
         Server.startServer(8080,
-                Path.of(new File(".").getAbsolutePath(), "WorkingDirectory").toString());
+                Path.of(new File(".").getAbsolutePath(), "target", "test-classes", "working").toString());
     }
 
     @AfterAll
