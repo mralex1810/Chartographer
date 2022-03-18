@@ -316,6 +316,79 @@ public class ChartographerTest {
         System.out.println("Second test case passed");
     }
 
+    @Test
+    void testThirdCase() throws IOException, InterruptedException, URISyntaxException {
+        HttpResponse<Void> responseUpdate;
+        HttpResponse<Path> responseGet;
+
+        responseUpdate = doUpdate(id, -5, -5, 10, 10, Path.of(resourceDirectory, "white10.bmp"));
+        Assertions.assertEquals(HttpURLConnection.HTTP_OK, responseUpdate.statusCode());
+
+        responseUpdate = doUpdate(id, -1, 90, 10, 10, Path.of(resourceDirectory, "red10.bmp"));
+        Assertions.assertEquals(HttpURLConnection.HTTP_OK, responseUpdate.statusCode());
+
+        responseUpdate = doUpdate(id, -10, -10, 10, 10, Path.of(resourceDirectory, "blue10.bmp"));
+        Assertions.assertEquals(HttpURLConnection.HTTP_BAD_REQUEST, responseUpdate.statusCode());
+
+        responseUpdate = doUpdate(id, 80, -54, 100, 100, Path.of(resourceDirectory, "green100.bmp"));
+        Assertions.assertEquals(HttpURLConnection.HTTP_OK, responseUpdate.statusCode());
+
+        responseUpdate = doUpdate(id, 30, -3, 10, 10, Path.of(resourceDirectory, "red10.bmp"));
+        Assertions.assertEquals(HttpURLConnection.HTTP_OK, responseUpdate.statusCode());
+
+        responseUpdate = doUpdate(id, 35, -8, 10, 10, Path.of(resourceDirectory, "blue10.bmp"));
+        Assertions.assertEquals(HttpURLConnection.HTTP_OK, responseUpdate.statusCode());
+
+        responseUpdate = doUpdate(id, 95, 85, 10, 10, Path.of(resourceDirectory, "white10.bmp"));
+        Assertions.assertEquals(HttpURLConnection.HTTP_OK, responseUpdate.statusCode());
+
+        responseGet = doGet(id, -10, 0, 120, 20);
+        Assertions.assertEquals(HttpURLConnection.HTTP_OK, responseGet.statusCode());
+        Assertions.assertTrue(isEquals(tmpPicture, Path.of(resourceDirectory, "thirdTest", "1.bmp")));
+
+        responseUpdate = doUpdate(id, -30, 30,120, 20, tmpPicture);
+        Assertions.assertEquals(HttpURLConnection.HTTP_OK, responseUpdate.statusCode());
+        tmpPicture.toFile().delete();
+
+
+        responseGet = doGet(id, -10, -30, 150, 150);
+        Assertions.assertEquals(HttpURLConnection.HTTP_OK, responseGet.statusCode());
+        Assertions.assertTrue(isEquals(tmpPicture, Path.of(resourceDirectory, "thirdTest", "2.bmp")));
+
+
+        responseUpdate = doUpdate(id, 50, 50,150, 150, tmpPicture);
+        Assertions.assertEquals(HttpURLConnection.HTTP_OK, responseUpdate.statusCode());
+        tmpPicture.toFile().delete();
+
+        responseGet = doGet(id, 90, 90, 10, 10);
+        Assertions.assertEquals(HttpURLConnection.HTTP_OK, responseGet.statusCode());
+        Assertions.assertTrue(isEquals(tmpPicture, Path.of(resourceDirectory, "thirdTest", "3.bmp")));
+        tmpPicture.toFile().delete();
+
+        responseGet = doGet(id, 0, 0, 100, 100);
+        Assertions.assertEquals(HttpURLConnection.HTTP_OK, responseGet.statusCode());
+        Assertions.assertTrue(isEquals(tmpPicture, Path.of(resourceDirectory, "thirdTest", "4.bmp")));
+        tmpPicture.toFile().delete();
+
+        responseGet = doGet(id, 50, 50, 100, 100);
+        Assertions.assertEquals(HttpURLConnection.HTTP_OK, responseGet.statusCode());
+        Assertions.assertTrue(isEquals(tmpPicture, Path.of(resourceDirectory, "thirdTest", "5.bmp")));
+        tmpPicture.toFile().delete();
+
+        responseGet = doGet(id, 56, 61, 46, 4);
+        Assertions.assertEquals(HttpURLConnection.HTTP_OK, responseGet.statusCode());
+        Assertions.assertTrue(isEquals(tmpPicture, Path.of(resourceDirectory, "thirdTest", "6.bmp")));
+        tmpPicture.toFile().delete();
+
+        responseGet = doGet(id, 2, 11, 120, 60);
+        Assertions.assertEquals(HttpURLConnection.HTTP_OK, responseGet.statusCode());
+        Assertions.assertTrue(isEquals(tmpPicture, Path.of(resourceDirectory, "thirdTest", "7.bmp")));
+        tmpPicture.toFile().delete();
+
+        System.out.println("Third test case passed");
+    }
+
+
     private HttpResponse<Void> doUpdate(String id, int x, int y, int width, int height, Path path)
             throws IOException, InterruptedException, URISyntaxException {
         HttpRequest request = HttpRequest.newBuilder()

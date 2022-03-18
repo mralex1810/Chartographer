@@ -35,7 +35,7 @@ public class ChartographerHandler implements HttpHandler {
         } else if (exchange.getRequestMethod().equals("DELETE")) {
             handleDelete(exchange);
         } else {
-            exchange.sendResponseHeaders(HttpURLConnection.HTTP_BAD_REQUEST, 0);
+            exchange.sendResponseHeaders(HttpURLConnection.HTTP_BAD_REQUEST, -1);
         }
         exchange.close();
     }
@@ -43,12 +43,12 @@ public class ChartographerHandler implements HttpHandler {
     private void handleDelete(HttpExchange exchange) throws IOException {
         long id = parseIdFromPath(exchange.getRequestURI().getPath());
         if (!chartsById.containsKey(id)) {
-            exchange.sendResponseHeaders(HttpURLConnection.HTTP_NOT_FOUND, 0);
+            exchange.sendResponseHeaders(HttpURLConnection.HTTP_NOT_FOUND, -1);
             return;
         }
         chartsById.get(id).delete();
         chartsById.remove(id);
-        exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, 0);
+        exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, -1);
 
     }
 
@@ -82,8 +82,7 @@ public class ChartographerHandler implements HttpHandler {
                 Integer.parseInt(query.get("height")),
                 exchange.getRequestBody()
         );
-        exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, 0);
-
+        exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, -1);
     }
 
 
@@ -98,7 +97,7 @@ public class ChartographerHandler implements HttpHandler {
             correct = false;
         }
         if (!correct) {
-            exchange.sendResponseHeaders(HttpURLConnection.HTTP_BAD_REQUEST, 0);
+            exchange.sendResponseHeaders(HttpURLConnection.HTTP_BAD_REQUEST, -1);
             return;
         }
         id = createNewChart(
@@ -113,12 +112,12 @@ public class ChartographerHandler implements HttpHandler {
 
     private boolean checkErrorHandle(long id, HttpExchange exchange, Map<String, String> query) throws IOException {
         if (!chartsById.containsKey(id)) {
-            exchange.sendResponseHeaders(HttpURLConnection.HTTP_NOT_FOUND, 0);
+            exchange.sendResponseHeaders(HttpURLConnection.HTTP_NOT_FOUND, -1);
             return true;
         }
         Chart chart = chartsById.get(id);
         if (invalidFragmentParameters(query, chart.getWidth(), chart.getHeight())) {
-            exchange.sendResponseHeaders(HttpURLConnection.HTTP_BAD_REQUEST, 0);
+            exchange.sendResponseHeaders(HttpURLConnection.HTTP_BAD_REQUEST, -1);
             return true;
         }
         return false;
@@ -131,8 +130,8 @@ public class ChartographerHandler implements HttpHandler {
             int y = Integer.parseInt(query.get("y"));
             int width = Integer.parseInt(query.get("width"));
             int height = Integer.parseInt(query.get("height"));
-            correct = width >= 1 && height >= 1 && width <= 5000 && height <= 5000 && x >= 0 && y >= 0;
-            correct &= x < pictureWidth && y < pictureHeight;
+            correct = width >= 1 && height >= 1 && width <= 5000 && height <= 5000;
+            correct &= x < pictureWidth && y < pictureHeight && x + width > 0 && y + height > 0;
         } catch (NumberFormatException e) {
             correct = false;
         }
