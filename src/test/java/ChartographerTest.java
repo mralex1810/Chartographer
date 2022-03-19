@@ -432,6 +432,31 @@ public class ChartographerTest {
         System.out.println("Third test case passed");
     }
 
+    @Test
+    void specialTest() throws IOException, URISyntaxException, InterruptedException {
+        System.out.println("Special test started");
+        HttpResponse<Void> responseUpdate;
+        HttpResponse<Path> responseGet;
+
+        responseUpdate = doUpdate(id, 5, 35, 15, 30, Path.of(resourceDirectory, "specialTest", "K.bmp"));
+        Assertions.assertEquals(HttpURLConnection.HTTP_OK, responseUpdate.statusCode());
+        responseUpdate = doUpdate(id, 20, 35, 15, 30, Path.of(resourceDirectory, "specialTest", "O.bmp"));
+        Assertions.assertEquals(HttpURLConnection.HTTP_OK, responseUpdate.statusCode());
+        responseUpdate = doUpdate(id, 35, 35, 15, 30, Path.of(resourceDirectory, "specialTest", "N.bmp"));
+        Assertions.assertEquals(HttpURLConnection.HTTP_OK, responseUpdate.statusCode());
+        responseUpdate = doUpdate(id, 50, 35, 15, 30, Path.of(resourceDirectory, "specialTest", "T.bmp"));
+        Assertions.assertEquals(HttpURLConnection.HTTP_OK, responseUpdate.statusCode());
+        responseUpdate = doUpdate(id, 65, 35, 15, 30, Path.of(resourceDirectory, "specialTest", "U.bmp"));
+        Assertions.assertEquals(HttpURLConnection.HTTP_OK, responseUpdate.statusCode());
+        responseUpdate = doUpdate(id, 80, 35, 15, 30, Path.of(resourceDirectory, "specialTest", "R.bmp"));
+        Assertions.assertEquals(HttpURLConnection.HTTP_OK, responseUpdate.statusCode());
+
+        responseGet = doGet(id, 0, 0, 100, 100);
+        Assertions.assertEquals(HttpURLConnection.HTTP_OK, responseGet.statusCode());
+        Assertions.assertTrue(isEquals(tmpPicture, Path.of(resourceDirectory, "specialTest", "KONTUR.bmp")));
+        tmpPicture.toFile().delete();
+    }
+
     private HttpResponse<String> doCreate(int width, int height)
             throws IOException, InterruptedException, URISyntaxException {
         HttpRequest request = HttpRequest.newBuilder()
