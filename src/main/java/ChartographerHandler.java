@@ -25,58 +25,63 @@ public class ChartographerHandler implements HttpHandler {
     public void handle(HttpExchange exchange) throws IOException {
         Objects.requireNonNull(exchange);
         Map<String, String> query = queryToMap(exchange.getRequestURI().getQuery());
-        if (exchange.getRequestMethod().equals("POST")) {
-            if (pathHasId(exchange.getRequestURI().getPath())) {
-                handleUpdate(exchange, query);
-            } else {
+        if (!pathHasId(exchange.getRequestURI().getPath())) {
+            if (exchange.getRequestMethod().equals("POST")) {
                 handleCreate(exchange, query);
+            } else {
+                exchange.sendResponseHeaders(HttpURLConnection.HTTP_BAD_REQUEST, -1);
             }
+            return;
+        }
+        String id = parseIdFromPath(exchange.getRequestURI().getPath());
+        if (!chartsById.containsKey(id)) {
+            exchange.sendResponseHeaders(HttpURLConnection.HTTP_NOT_FOUND, -1);
+            return;
+        }
+        Chart chart = chartsById.get(id);
+
+        if (exchange.getRequestMethod().equals("POST")) {
+            handleUpdate(exchange, query, chart);
         } else if (exchange.getRequestMethod().equals("GET")) {
-            handleGet(exchange, query);
+            handleGet(exchange, query, chart);
         } else if (exchange.getRequestMethod().equals("DELETE")) {
-            handleDelete(exchange);
+            handleDelete(exchange, chart, id);
         } else {
             exchange.sendResponseHeaders(HttpURLConnection.HTTP_BAD_REQUEST, -1);
         }
         exchange.close();
     }
 
-    private void handleDelete(HttpExchange exchange) throws IOException {
-        String id = parseIdFromPath(exchange.getRequestURI().getPath());
-        if (!chartsById.containsKey(id)) {
-            exchange.sendResponseHeaders(HttpURLConnection.HTTP_NOT_FOUND, -1);
-            return;
-        }
-        chartsById.get(id).delete();
+    private void handleDelete(HttpExchange exchange, Chart chart, String id) throws IOException {
+        chart.delete();
         chartsById.remove(id);
         exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, -1);
 
     }
 
-    private void handleGet(HttpExchange exchange, Map<String, String> query) throws IOException {
-        String id = parseIdFromPath(exchange.getRequestURI().getPath());
-        if (checkErrorHandle(id, exchange, query)) {
+    private void handleGet(HttpExchange exchange, Map<String, String> query, Chart chart) throws IOException {
+        if (invalidFragmentParameters(query, chart, 5000)) {
+            exchange.sendResponseHeaders(HttpURLConnection.HTTP_BAD_REQUEST, -1);
             return;
         }
         int width = Integer.parseInt(query.get("width"));
         int height = Integer.parseInt(query.get("height"));
         exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, BMP.sizeOfBmp(width, height));
-        chartsById.get(id).getSegmentIntoStream(
+        chart.getSegmentIntoStream(
                 Integer.parseInt(query.get("x")),
                 Integer.parseInt(query.get("y")),
                 width,
                 height,
                 exchange.getResponseBody()
         );
-
     }
 
-    private void handleUpdate(HttpExchange exchange, Map<String, String> query) throws IOException {
-        String id = parseIdFromPath(exchange.getRequestURI().getPath());
-        if (checkErrorHandle(id, exchange, query)) {
+    private void handleUpdate(HttpExchange exchange, Map<String, String> query, Chart chart) throws IOException {
+        if (invalidFragmentParameters(query, chart, Integer.MAX_VALUE)) {
+            exchange.sendResponseHeaders(HttpURLConnection.HTTP_BAD_REQUEST, -1);
             return;
         }
-        chartsById.get(id).updateSegmentFromStream(
+        chart.updateSegmentFromStream(
                 Integer.parseInt(query.get("x")),
                 Integer.parseInt(query.get("y")),
                 Integer.parseInt(query.get("width")),
@@ -88,7 +93,6 @@ public class ChartographerHandler implements HttpHandler {
 
 
     private void handleCreate(HttpExchange exchange, Map<String, String> query) throws IOException {
-        String id;
         boolean correct;
         try {
             int width = Integer.parseInt(query.get("width"));
@@ -101,7 +105,7 @@ public class ChartographerHandler implements HttpHandler {
             exchange.sendResponseHeaders(HttpURLConnection.HTTP_BAD_REQUEST, -1);
             return;
         }
-        id = createNewChart(
+        String id = createNewChart(
                 Integer.parseInt(query.get("width")),
                 Integer.parseInt(query.get("height"))
         );
@@ -111,28 +115,15 @@ public class ChartographerHandler implements HttpHandler {
         }
     }
 
-    private boolean checkErrorHandle(String id, HttpExchange exchange, Map<String, String> query) throws IOException {
-        if (!chartsById.containsKey(id)) {
-            exchange.sendResponseHeaders(HttpURLConnection.HTTP_NOT_FOUND, -1);
-            return true;
-        }
-        Chart chart = chartsById.get(id);
-        if (invalidFragmentParameters(query, chart.getWidth(), chart.getHeight())) {
-            exchange.sendResponseHeaders(HttpURLConnection.HTTP_BAD_REQUEST, -1);
-            return true;
-        }
-        return false;
-    }
-
-    private boolean invalidFragmentParameters(Map<String, String> query, int pictureWidth, int pictureHeight) {
+    private boolean invalidFragmentParameters(Map<String, String> query, Chart chart, int limit) {
         boolean correct;
         try {
             int x = Integer.parseInt(query.get("x"));
             int y = Integer.parseInt(query.get("y"));
             int width = Integer.parseInt(query.get("width"));
             int height = Integer.parseInt(query.get("height"));
-            correct = width >= 1 && height >= 1 && width <= 5000 && height <= 5000;
-            correct &= x < pictureWidth && y < pictureHeight && x + width > 0 && y + height > 0;
+            correct = width >= 1 && height >= 1 && width <= limit && height <= limit;
+            correct &= x < chart.getWidth() && y < chart.getHeight() && x + width > 0 && y + height > 0;
         } catch (NumberFormatException e) {
             correct = false;
         }

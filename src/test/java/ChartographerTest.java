@@ -85,6 +85,9 @@ public class ChartographerTest {
     void testUpdateOk() throws URISyntaxException, IOException, InterruptedException {
         System.out.println("Update Ok tests started");
         HttpResponse<Void> response;
+
+        response = doUpdate(id, 0, 0, 5001, 1, Path.of(resourceDirectory, "5001x1.bmp"));
+        Assertions.assertEquals(HttpURLConnection.HTTP_OK, response.statusCode());
         response = doUpdate(id, 0, 0, 10, 10, Path.of(resourceDirectory, "white10.bmp"));
         Assertions.assertEquals(HttpURLConnection.HTTP_OK, response.statusCode());
         response = doUpdate(id, -5, -9, 10, 10, Path.of(resourceDirectory, "white10.bmp"));
@@ -472,8 +475,7 @@ public class ChartographerTest {
                 .uri(new URI("http://localhost:8080/chartas/" + id + "/"))
                 .DELETE()
                 .build();
-        HttpResponse<Void> response = client.send(request, HttpResponse.BodyHandlers.discarding());
-        return response;
+        return client.send(request, HttpResponse.BodyHandlers.discarding());
     }
 
     private HttpResponse<Void> doUpdate(String id, int x, int y, int width, int height, Path path)
