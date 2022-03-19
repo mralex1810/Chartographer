@@ -39,15 +39,16 @@ public class ChartographerHandler implements HttpHandler {
             return;
         }
         Chart chart = chartsById.get(id);
-
-        if (exchange.getRequestMethod().equals("POST")) {
-            handleUpdate(exchange, query, chart);
-        } else if (exchange.getRequestMethod().equals("GET")) {
-            handleGet(exchange, query, chart);
-        } else if (exchange.getRequestMethod().equals("DELETE")) {
-            handleDelete(exchange, chart, id);
-        } else {
-            exchange.sendResponseHeaders(HttpURLConnection.HTTP_BAD_REQUEST, -1);
+        synchronized (chart) {
+            if (exchange.getRequestMethod().equals("POST")) {
+                handleUpdate(exchange, query, chart);
+            } else if (exchange.getRequestMethod().equals("GET")) {
+                handleGet(exchange, query, chart);
+            } else if (exchange.getRequestMethod().equals("DELETE")) {
+                handleDelete(exchange, chart, id);
+            } else {
+                exchange.sendResponseHeaders(HttpURLConnection.HTTP_BAD_REQUEST, -1);
+            }
         }
         exchange.close();
     }

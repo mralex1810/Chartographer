@@ -2,6 +2,7 @@ import com.sun.net.httpserver.HttpServer;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.concurrent.Executors;
 
 public class Server {
 
@@ -24,6 +25,7 @@ public class Server {
                     0
             );
             server.createContext("/chartas", new ChartographerHandler(workingDirectory));
+            server.setExecutor(Executors.newCachedThreadPool());
             server.start();
         } catch (IOException e) {
             System.err.println("Problem with IO: " + e.getMessage());
