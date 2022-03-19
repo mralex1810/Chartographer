@@ -4,6 +4,7 @@ import com.sun.net.httpserver.HttpHandler;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.math.BigInteger;
 import java.net.HttpURLConnection;
 import java.util.HashMap;
 import java.util.Map;
@@ -11,9 +12,9 @@ import java.util.Objects;
 
 public class ChartographerHandler implements HttpHandler {
 
-    private static long maxId = 0;
+    private static BigInteger lastId = BigInteger.ZERO;
     private final String workingDirectory;
-    private final Map<Long, Chart> chartsById;
+    private final Map<String, Chart> chartsById;
 
     public ChartographerHandler(String workingDirectory) {
         this.workingDirectory = workingDirectory;
@@ -41,7 +42,7 @@ public class ChartographerHandler implements HttpHandler {
     }
 
     private void handleDelete(HttpExchange exchange) throws IOException {
-        long id = parseIdFromPath(exchange.getRequestURI().getPath());
+        String id = parseIdFromPath(exchange.getRequestURI().getPath());
         if (!chartsById.containsKey(id)) {
             exchange.sendResponseHeaders(HttpURLConnection.HTTP_NOT_FOUND, -1);
             return;
@@ -53,7 +54,7 @@ public class ChartographerHandler implements HttpHandler {
     }
 
     private void handleGet(HttpExchange exchange, Map<String, String> query) throws IOException {
-        long id = parseIdFromPath(exchange.getRequestURI().getPath());
+        String id = parseIdFromPath(exchange.getRequestURI().getPath());
         if (checkErrorHandle(id, exchange, query)) {
             return;
         }
@@ -71,7 +72,7 @@ public class ChartographerHandler implements HttpHandler {
     }
 
     private void handleUpdate(HttpExchange exchange, Map<String, String> query) throws IOException {
-        long id = parseIdFromPath(exchange.getRequestURI().getPath());
+        String id = parseIdFromPath(exchange.getRequestURI().getPath());
         if (checkErrorHandle(id, exchange, query)) {
             return;
         }
@@ -87,7 +88,7 @@ public class ChartographerHandler implements HttpHandler {
 
 
     private void handleCreate(HttpExchange exchange, Map<String, String> query) throws IOException {
-        long id;
+        String id;
         boolean correct;
         try {
             int width = Integer.parseInt(query.get("width"));
@@ -104,13 +105,13 @@ public class ChartographerHandler implements HttpHandler {
                 Integer.parseInt(query.get("width")),
                 Integer.parseInt(query.get("height"))
         );
-        exchange.sendResponseHeaders(HttpURLConnection.HTTP_CREATED, Long.toString(id).length());
+        exchange.sendResponseHeaders(HttpURLConnection.HTTP_CREATED, id.length());
         try (OutputStreamWriter outputStream = new OutputStreamWriter(exchange.getResponseBody())) {
-            outputStream.write(Long.toString(id));
+            outputStream.write(id);
         }
     }
 
-    private boolean checkErrorHandle(long id, HttpExchange exchange, Map<String, String> query) throws IOException {
+    private boolean checkErrorHandle(String id, HttpExchange exchange, Map<String, String> query) throws IOException {
         if (!chartsById.containsKey(id)) {
             exchange.sendResponseHeaders(HttpURLConnection.HTTP_NOT_FOUND, -1);
             return true;
@@ -138,24 +139,25 @@ public class ChartographerHandler implements HttpHandler {
         return !correct;
     }
 
-    private long createNewChart(int width, int height) throws IOException {
-        long newId = generateNewId();
+    private String createNewChart(int width, int height) throws IOException {
+        String newId = generateNewId();
         File picture = new File(workingDirectory + "/" + newId + ".bmp");
         chartsById.put(newId, new Chart(picture, width, height));
         return newId;
     }
 
 
-    private long generateNewId() {
-        return maxId++;
+    private String generateNewId() {
+        lastId = lastId.add(BigInteger.ONE);
+        return lastId.toString();
     }
 
     private boolean pathHasId(String path) {
         return path.split("/").length == 3;
     }
 
-    private long parseIdFromPath(String path) {
-        return Long.parseLong(path.split("/")[2]);
+    private String parseIdFromPath(String path) {
+        return path.split("/")[2];
     }
 
     private Map<String, String> queryToMap(String query) {
