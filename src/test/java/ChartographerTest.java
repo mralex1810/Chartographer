@@ -455,6 +455,7 @@ public class ChartographerTest {
         Assertions.assertEquals(HttpURLConnection.HTTP_OK, responseGet.statusCode());
         Assertions.assertTrue(isEquals(tmpPicture, Path.of(resourceDirectory, "specialTest", "KONTUR.bmp")));
         tmpPicture.toFile().delete();
+        System.out.println("Special test passed");
     }
 
     private HttpResponse<String> doCreate(int width, int height)
