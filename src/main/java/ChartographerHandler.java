@@ -139,7 +139,7 @@ public class ChartographerHandler implements HttpHandler {
     }
 
 
-    private String generateNewId() {
+    private synchronized String generateNewId() {
         lastId = lastId.add(BigInteger.ONE);
         return lastId.toString();
     }
